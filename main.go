@@ -16,19 +16,19 @@ type githubError struct {
 	Message string `json:"message"`
 }
 
-func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", os.Args[0])
+func usage(arg string) {
+	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", arg)
 }
 
 func main() {
 	if len(os.Args) < 2 {
-		usage()
+		usage(os.Args[0])
 		os.Exit(2)
 	}
 	user := strings.Join(os.Args[1:], " ")
 	if user == "" {
 		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
-		usage()
+		usage(os.Args[0])
 		os.Exit(2)
 	}
 	resp, err := http.Get(fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user)))
