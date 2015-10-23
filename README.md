@@ -8,7 +8,11 @@ Usage
 ```bash
 $ go get github.com/blang/ghkeys
 
-// Get my ssh keys
+$ ghkeys blang
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD8uS2zFn...
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDa22h62I...
+
+// Now you can give a user access to your machine 
 $ ghkeys blang >> ~/.ssh/authorized_keys
 ```
 
