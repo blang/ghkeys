@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -20,31 +21,31 @@ func usage(arg string) {
 	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", arg)
 }
 
-func getGithubKeys(user string) githubKeys {
-	resp, err := http.Get(fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user)))
+func getApiUrl(user string) string {
+	return fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user))
+}
+
+func getGithubKeys(url string) (githubKeys, error) {
+	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error requesting api: %s\n", err)
-		os.Exit(1)
+		return nil, err
 	}
 	dec := json.NewDecoder(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		var ghError githubError
 		err = dec.Decode(&ghError)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unknown error occurred.\n")
-			os.Exit(1)
+			return nil, err
 		}
-		fmt.Fprintf(os.Stderr, "API Error: %s.\n", ghError.Message)
-		os.Exit(1)
+		return nil, errors.New(ghError.Message)
 	}
 	var ghKeys githubKeys
 	err = dec.Decode(&ghKeys)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
-		os.Exit(1)
+		return nil, err
 	}
 
-	return ghKeys
+	return ghKeys, nil
 }
 
 func main() {
@@ -59,7 +60,12 @@ func main() {
 		os.Exit(2)
 	}
 
-	ghKeys := getGithubKeys(user)
+	ghKeys, err := getGithubKeys(getApiUrl(user))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error requesting api: %s\n", err)
+		os.Exit(1)
+	}
+
 	for _, key := range ghKeys {
 		fmt.Printf("%s\n", key.Key)
 	}
