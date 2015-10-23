@@ -20,17 +20,7 @@ func usage(arg string) {
 	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", arg)
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		usage(os.Args[0])
-		os.Exit(2)
-	}
-	user := strings.Join(os.Args[1:], " ")
-	if user == "" {
-		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
-		usage(os.Args[0])
-		os.Exit(2)
-	}
+func getGithubKeys(user string) githubKeys {
 	resp, err := http.Get(fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user)))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error requesting api: %s\n", err)
@@ -53,6 +43,23 @@ func main() {
 		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
 		os.Exit(1)
 	}
+
+	return ghKeys
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		usage(os.Args[0])
+		os.Exit(2)
+	}
+	user := strings.Join(os.Args[1:], " ")
+	if user == "" {
+		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
+		usage(os.Args[0])
+		os.Exit(2)
+	}
+
+	ghKeys := getGithubKeys(user)
 	for _, key := range ghKeys {
 		fmt.Printf("%s\n", key.Key)
 	}
