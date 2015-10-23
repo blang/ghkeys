@@ -65,6 +65,26 @@ func TestGetGithubKeysServerError(t *testing.T) {
 	}
 }
 
+func TestGetGithubKeysServerErrorParseError(t *testing.T) {
+	fs := fakeServer{404, `{wrong}`}
+	testServer := httptest.NewServer(fs)
+
+	_, err := getGithubKeys(testServer.URL)
+	if err == nil {
+		t.Error("Wrong API error result")
+	}
+}
+
+func TestGetGithubKeysServerParseError(t *testing.T) {
+	fs := fakeServer{http.StatusOK, `[{wrong}]`}
+	testServer := httptest.NewServer(fs)
+
+	_, err := getGithubKeys(testServer.URL)
+	if err == nil {
+		t.Error("Wrong API error result", err)
+	}
+}
+
 func TestGetGithubKeysServerSuccess(t *testing.T) {
 	fs := fakeServer{http.StatusOK, `[{"key":"testKey1"},{"key":"testKey2"}]`}
 	testServer := httptest.NewServer(fs)
