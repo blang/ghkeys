@@ -5,9 +5,14 @@ ghkeys is a tiny utility to get the public ssh keys of a github user.
 
 Usage
 -----
+
 ```bash
 $ go get github.com/blang/ghkeys
+```
 
+Instead `go get`, you can [download](https://github.com/blang/ghkeys/releases) a release for your platform.
+
+```bash
 $ ghkeys blang
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD8uS2zFn...
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDa22h62I...
