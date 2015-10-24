@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
@@ -16,43 +17,55 @@ type githubError struct {
 	Message string `json:"message"`
 }
 
-func usage() {
-	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", os.Args[0])
+func usage(arg string) string {
+	return fmt.Sprintf("Usage: %s [USERNAME]\n", arg)
 }
 
-func main() {
-	if len(os.Args) < 2 {
-		usage()
-		os.Exit(2)
-	}
-	user := strings.Join(os.Args[1:], " ")
-	if user == "" {
-		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
-		usage()
-		os.Exit(2)
-	}
-	resp, err := http.Get(fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user)))
+func getApiUrl(user string) string {
+	return fmt.Sprintf("https://api.github.com/users/%s/keys", strings.ToLower(user))
+}
+
+func getGithubKeys(url string) (githubKeys, error) {
+	resp, err := http.Get(url)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error requesting api: %s\n", err)
-		os.Exit(1)
+		return nil, err
 	}
 	dec := json.NewDecoder(resp.Body)
 	if resp.StatusCode != http.StatusOK {
 		var ghError githubError
 		err = dec.Decode(&ghError)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Unknown error occurred.\n")
-			os.Exit(1)
+			return nil, err
 		}
-		fmt.Fprintf(os.Stderr, "API Error: %s.\n", ghError.Message)
-		os.Exit(1)
+		return nil, errors.New(ghError.Message)
 	}
 	var ghKeys githubKeys
 	err = dec.Decode(&ghKeys)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %s\n", err)
+		return nil, err
+	}
+
+	return ghKeys, nil
+}
+
+func main() {
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, usage(os.Args[0]))
+		os.Exit(2)
+	}
+	user := strings.Join(os.Args[1:], " ")
+	if user == "" {
+		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
+		fmt.Fprintf(os.Stderr, usage(os.Args[0]))
+		os.Exit(2)
+	}
+
+	ghKeys, err := getGithubKeys(getApiUrl(user))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error requesting api: %s\n", err)
 		os.Exit(1)
 	}
+
 	for _, key := range ghKeys {
 		fmt.Printf("%s\n", key.Key)
 	}
