@@ -44,35 +44,21 @@ func TestGetGithubKeysServer(t *testing.T) {
 		ExpectedResult githubKeys
 	}{
 		{
-			s: fakeServer{
-				http.StatusNotFound,
-				`{"message": "Error"}`,
-			},
+			s:           fakeServer{http.StatusNotFound, `{"message": "Error"}`},
 			ExpectError: true,
 		},
 		{
-			s: fakeServer{
-				http.StatusNotFound,
-				`[{wrong}]`,
-			},
+			s:           fakeServer{http.StatusNotFound, `[{wrong}]`},
 			ExpectError: true,
 		},
 		{
-			s: fakeServer{
-				http.StatusOK,
-				`[{wrong}]`,
-			},
+			s:           fakeServer{http.StatusOK, `[{wrong}]`},
 			ExpectError: true,
 		},
 		{
-			s: fakeServer{
-				http.StatusOK,
-				`[{"key":"testKey1"},{"key":"testKey2"}]`,
-			},
-			ExpectError: false,
-			ExpectedResult: githubKeys{
-				{Key: "testKey1"}, {Key: "testKey2"},
-			},
+			s:              fakeServer{http.StatusOK, `[{"key":"testKey1"},{"key":"testKey2"}]`},
+			ExpectError:    false,
+			ExpectedResult: githubKeys{{Key: "testKey1"}, {Key: "testKey2"}},
 		},
 	}
 
