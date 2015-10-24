@@ -1,29 +1,14 @@
 package main
 
 import (
-	"bytes"
-	"io"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"reflect"
 	"testing"
 )
 
 func TestUsage(t *testing.T) {
-	r, w, _ := os.Pipe()
-	os.Stderr = w
-	usage("Test")
-
-	outChan := make(chan string)
-	go func() {
-		var buf bytes.Buffer
-		io.Copy(&buf, r)
-		outChan <- buf.String()
-	}()
-	w.Close()
-
-	if <-outChan != "Usage: Test [USERNAME]\n" {
+	if usage("Test") != "Usage: Test [USERNAME]\n" {
 		t.Error("Wrong usage message")
 	}
 }
@@ -35,6 +20,13 @@ func TestGetApiUrl(t *testing.T) {
 	}
 }
 
+func TestGetGithubKeysConnectionError(t *testing.T) {
+	_, err := getGithubKeys("htt://wringurl")
+	if err == nil {
+		t.Error("Missing API error result")
+	}
+}
+
 type fakeServer struct {
 	StatusCode int
 	Result     string
@@ -43,13 +35,6 @@ type fakeServer struct {
 func (s fakeServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(s.StatusCode)
 	w.Write([]byte(s.Result))
-}
-
-func TestGetGithubKeysConnectionError(t *testing.T) {
-	_, err := getGithubKeys("htt://wringurl")
-	if err == nil {
-		t.Error("Missing API error result")
-	}
 }
 
 func TestGetGithubKeysServer(t *testing.T) {

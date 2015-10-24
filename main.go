@@ -17,8 +17,8 @@ type githubError struct {
 	Message string `json:"message"`
 }
 
-func usage(arg string) {
-	fmt.Fprintf(os.Stderr, "Usage: %s [USERNAME]\n", arg)
+func usage(arg string) string {
+	return fmt.Sprintf("Usage: %s [USERNAME]\n", arg)
 }
 
 func getApiUrl(user string) string {
@@ -50,13 +50,13 @@ func getGithubKeys(url string) (githubKeys, error) {
 
 func main() {
 	if len(os.Args) < 2 {
-		usage(os.Args[0])
+		fmt.Println(usage(os.Args[0]))
 		os.Exit(2)
 	}
 	user := strings.Join(os.Args[1:], " ")
 	if user == "" {
 		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
-		usage(os.Args[0])
+		fmt.Println(usage(os.Args[0]))
 		os.Exit(2)
 	}
 
