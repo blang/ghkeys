@@ -52,52 +52,57 @@ func TestGetGithubKeysConnectionError(t *testing.T) {
 	}
 }
 
-func TestGetGithubKeysServerError(t *testing.T) {
-	fs := fakeServer{404, `{"message": "Error"}`}
-	testServer := httptest.NewServer(fs)
-
-	_, err := getGithubKeys(testServer.URL)
-	if err == nil {
-		t.Error("Missing API error result")
-	}
-	if err.Error() != "Error" {
-		t.Error("Wrong API error result", err)
-	}
-}
-
-func TestGetGithubKeysServerErrorParseError(t *testing.T) {
-	fs := fakeServer{404, `{wrong}`}
-	testServer := httptest.NewServer(fs)
-
-	_, err := getGithubKeys(testServer.URL)
-	if err == nil {
-		t.Error("Wrong API error result")
-	}
-}
-
-func TestGetGithubKeysServerParseError(t *testing.T) {
-	fs := fakeServer{http.StatusOK, `[{wrong}]`}
-	testServer := httptest.NewServer(fs)
-
-	_, err := getGithubKeys(testServer.URL)
-	if err == nil {
-		t.Error("Wrong API error result", err)
-	}
-}
-
-func TestGetGithubKeysServerSuccess(t *testing.T) {
-	fs := fakeServer{http.StatusOK, `[{"key":"testKey1"},{"key":"testKey2"}]`}
-	testServer := httptest.NewServer(fs)
-
-	res, err := getGithubKeys(testServer.URL)
-	if err != nil {
-		t.Error("Wrong API error result", err)
+func TestGetGithubKeysServer(t *testing.T) {
+	testCases := []struct {
+		s              fakeServer
+		ExpectError    bool
+		ExpectedResult githubKeys
+	}{
+		{
+			s: fakeServer{
+				http.StatusNotFound,
+				`{"message": "Error"}`,
+			},
+			ExpectError: true,
+		},
+		{
+			s: fakeServer{
+				http.StatusNotFound,
+				`[{wrong}]`,
+			},
+			ExpectError: true,
+		},
+		{
+			s: fakeServer{
+				http.StatusOK,
+				`[{wrong}]`,
+			},
+			ExpectError: true,
+		},
+		{
+			s: fakeServer{
+				http.StatusOK,
+				`[{"key":"testKey1"},{"key":"testKey2"}]`,
+			},
+			ExpectError: false,
+			ExpectedResult: githubKeys{
+				{Key: "testKey1"}, {Key: "testKey2"},
+			},
+		},
 	}
 
-	expected := githubKeys{
-		{Key: "testKey1"}, {Key: "testKey2"},
-	}
-	if !reflect.DeepEqual(expected, res) {
-		t.Errorf("Wrong result! Expected: %s, Got: %s\n", expected, res)
+	for _, c := range testCases {
+		testServer := httptest.NewServer(c.s)
+		res, err := getGithubKeys(testServer.URL)
+		if c.ExpectError && err == nil {
+			t.Errorf("Missing error at case: %v", c.s)
+		} else if !c.ExpectError {
+			if err != nil {
+				t.Errorf("Not expected error %v, at case: %v", err, c.s)
+			}
+			if !reflect.DeepEqual(c.ExpectedResult, res) {
+				t.Errorf("Wrong result! Expected: %s, Got: %s\n", c.ExpectedResult, res)
+			}
+		}
 	}
 }
