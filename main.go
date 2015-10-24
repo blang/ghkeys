@@ -50,13 +50,13 @@ func getGithubKeys(url string) (githubKeys, error) {
 
 func main() {
 	if len(os.Args) < 2 {
-		fmt.Println(usage(os.Args[0]))
+		fmt.Fprintf(os.Stderr, usage(os.Args[0]))
 		os.Exit(2)
 	}
 	user := strings.Join(os.Args[1:], " ")
 	if user == "" {
 		fmt.Fprintf(os.Stderr, "Error: Invalid username\n")
-		fmt.Println(usage(os.Args[0]))
+		fmt.Fprintf(os.Stderr, usage(os.Args[0]))
 		os.Exit(2)
 	}
 
